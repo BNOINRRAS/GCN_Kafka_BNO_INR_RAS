@@ -5,9 +5,25 @@ import threading
 import os
 import signal
 
+# --------- Timer for checking settings
+def run_every_n_seconds(seconds, action, *args):
+    threading.Timer(seconds, run_every_n_seconds, [seconds, action] + list(args)).start()
+    action(*args)
+
+def timer_task():
+    settingsFile = open('settings', 'r')
+    valueRunTheProgram = settingsFile.read()
+    settingsFile.close()
+    if valueRunTheProgram[0] != 'y':
+        print('Exiting the program')
+        os.kill(os.getpid(), signal.SIGINT)
+
+run_every_n_seconds(5, timer_task)
+# ---------
+
 # Connect as a consumer. Warning: don't share the client secret with others.
-consumer = Consumer(client_id='',
-                    client_secret='')
+consumer = Consumer(client_id='219sj2mptl7ba67okloru4o43m',
+                    client_secret='93ovuqd3tebohtqfubauhj27rd7lc093ioj697o09q694tbj482')
 
 # Subscribe to topics and receive alerts
 consumer.subscribe(['gcn.classic.binary.INTEGRAL_WAKEUP',
@@ -27,27 +43,6 @@ consumer.subscribe(['gcn.classic.binary.INTEGRAL_WAKEUP',
                     'gcn.classic.binary.LVC_UPDATE',
                     'gcn.classic.binary.LVC_PRELIMINARY'
                     ])
-
-# --------- Timer for checking settings
-def run_every_n_seconds(seconds, action, *args):
-    threading.Timer(seconds, run_every_n_seconds, [seconds, action] + list(args)).start()
-    action(*args)
-
-def timer_task():
-    settingsFile = open('settings', 'r')
-    linesRunTheProgram = settingsFile.readlines()
-    for line in linesRunTheProgram:
-        key, value = line.strip().split('\t')
-        # keyRunTheProgram = key
-        valueRunTheProgram = value
-        print(valueRunTheProgram)
-    settingsFile.close()
-    if valueRunTheProgram != 'y':
-        print('Exiting the program')
-        os.kill(os.getpid(), signal.SIGINT)
-
-run_every_n_seconds(5, timer_task)
-# ---------
 
 while True:
     for message in consumer.consume(timeout=1):
